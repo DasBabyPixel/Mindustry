@@ -26,12 +26,18 @@ import mindustry.type.*;
 
 import java.io.*;
 
+import static arc.Core.*;
+import static arc.backend.sdl.jni.SDL.*;
 import static mindustry.Vars.*;
 
 public class DesktopLauncher extends ClientLauncher{
     public final static long discordID = 610508934456934412L;
     boolean useDiscord = !OS.hasProp("nodiscord"), loadError = false;
     Throwable steamError;
+    private boolean isBorderless = false;
+    private int oldWindowedWidth = -1, oldWindowedHeight = -1;
+    private int oldWindowedPosX, oldWindowedPosY;
+    private boolean oldWindowMaximized = false;
 
     public static void main(String[] arg){
         try{
@@ -354,6 +360,61 @@ public class DesktopLauncher extends ClientLauncher{
             }else{
                 SVars.net.friends.setRichPresence("steam_status", uiState);
             }
+        }
+    }
+
+    @Override
+    public void updateFullscreen(){
+        // Desktop could also be mobile while testing
+        if(mobile) return;
+
+        // SDL cast for more access
+        SdlApplication sdlApplication = (SdlApplication)app;
+        long window = sdlApplication.getWindow();
+
+        if(oldWindowedWidth == -1 && oldWindowedHeight == -1 && settings.getBool("fullscreen")){
+            int[] xy = new int[2];
+            SDL_GetWindowPosition(sdlApplication.getWindow(), xy);
+            oldWindowedPosX = xy[0];
+            oldWindowedPosY = xy[1];
+            oldWindowedWidth = graphics.getWidth();
+            oldWindowedHeight = graphics.getHeight();
+            oldWindowMaximized = (SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) == SDL_WINDOW_MAXIMIZED;
+            if(settings.getBool("borderlesswindow")){
+                graphics.setBorderless(isBorderless = true);
+            }else{
+                if(oldWindowMaximized){
+                    SDL_RestoreWindow(window);
+                    int[] wh = new int[2];
+                    SDL_GetWindowSize(window, wh);
+                    SDL_GetWindowPosition(window, xy);
+                    oldWindowedWidth = wh[0];
+                    oldWindowedHeight = wh[1];
+                    oldWindowedPosX = xy[0];
+                    oldWindowedPosY = xy[1];
+                    SDL_MaximizeWindow(window);
+                }
+                graphics.setFullscreen();
+            }
+        }else if(oldWindowedWidth > 0 && oldWindowedHeight > 0){
+            if(isBorderless){
+                graphics.setBorderless(isBorderless = false);
+            }else{
+                SDL_SetWindowFullscreen(window, 0);
+            }
+
+            if(!isBorderless && oldWindowMaximized){
+                // Might seem extra work, but is required for at least Windows to remember the original size and position before maximizing
+                SDL_RestoreWindow(window);
+            }
+
+            SDL_SetWindowSize(window, oldWindowedWidth, oldWindowedHeight);
+            SDL_SetWindowPosition(window, oldWindowedPosX, oldWindowedPosY);
+
+            if(!isBorderless && oldWindowMaximized){
+                SDL_MaximizeWindow(window);
+            }
+            oldWindowedWidth = oldWindowedHeight = -1;
         }
     }
 

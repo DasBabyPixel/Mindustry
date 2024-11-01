@@ -617,20 +617,16 @@ public class Control implements ApplicationListener, Loadable{
 
         if(Core.input.keyTap(Binding.fullscreen)){
             boolean full = settings.getBool("fullscreen");
-            if(full){
-                graphics.setWindowedMode(graphics.getWidth(), graphics.getHeight());
-            }else{
-                graphics.setFullscreen();
-            }
             settings.put("fullscreen", !full);
+            platform.updateFullscreen();
         }
 
         if(Float.isNaN(Vars.player.x) || Float.isNaN(Vars.player.y)){
             player.set(0, 0);
             if(!player.dead()) player.unit().kill();
         }
-        if(Float.isNaN(camera.position.x)) camera.position.x = world.unitWidth()/2f;
-        if(Float.isNaN(camera.position.y)) camera.position.y = world.unitHeight()/2f;
+        if(Float.isNaN(camera.position.x)) camera.position.x = world.unitWidth() / 2f;
+        if(Float.isNaN(camera.position.y)) camera.position.y = world.unitHeight() / 2f;
 
         if(state.isGame()){
             input.update();

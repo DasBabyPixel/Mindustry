@@ -91,6 +91,10 @@ public interface Platform{
     default void updateRPC(){
     }
 
+    /** Update fullscreen on desktop */
+    default void updateFullscreen(){
+    }
+
     /** Must be a base64 string 8 bytes in length. */
     default String getUUID(){
         String uuid = Core.settings.getString("uuid", "");
@@ -162,12 +166,12 @@ public interface Platform{
 
                 //zenity doesn't support filtering by extension
                 Seq<String> args = Seq.with("zenity",
-                    "--file-selection",
-                    "--title=" + formatted,
-                    "--filename=" + last,
-                    "--confirm-overwrite",
-                    "--file-filter=" + Seq.with(extensions).toString(" ", s -> "*." + s),
-                    "--file-filter=All files | *" //allow anything if the user wants
+                "--file-selection",
+                "--title=" + formatted,
+                "--filename=" + last,
+                "--confirm-overwrite",
+                "--file-filter=" + Seq.with(extensions).toString(" ", s -> "*." + s),
+                "--file-filter=All files | *" //allow anything if the user wants
                 );
 
                 if(!open){
