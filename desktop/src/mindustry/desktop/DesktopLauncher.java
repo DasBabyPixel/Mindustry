@@ -55,13 +55,27 @@ public class DesktopLauncher extends ClientLauncher{
                         String name = arg[i].substring(1);
                         try{
                             switch(name){
-                                case "width": width = Integer.parseInt(arg[i + 1]); break;
-                                case "height": height = Integer.parseInt(arg[i + 1]); break;
-                                case "gl3": gl30 = true; break;
-                                case "gl2": gl30 = false; break;
-                                case "antialias": samples = 16; break;
-                                case "debug": Log.level = LogLevel.debug; break;
-                                case "maximized": maximized = Boolean.parseBoolean(arg[i + 1]); break;
+                                case "width":
+                                    width = Integer.parseInt(arg[i + 1]);
+                                    break;
+                                case "height":
+                                    height = Integer.parseInt(arg[i + 1]);
+                                    break;
+                                case "gl3":
+                                    gl30 = true;
+                                    break;
+                                case "gl2":
+                                    gl30 = false;
+                                    break;
+                                case "antialias":
+                                    samples = 16;
+                                    break;
+                                case "debug":
+                                    Log.level = LogLevel.debug;
+                                    break;
+                                case "maximized":
+                                    maximized = Boolean.parseBoolean(arg[i + 1]);
+                                    break;
                             }
                         }catch(NumberFormatException number){
                             Log.warn("Invalid parameter number value.");
@@ -233,13 +247,13 @@ public class DesktopLauncher extends ClientLauncher{
         String finalMessage = Strings.getFinalMessage(e);
         String total = Strings.getCauses(e).toString();
 
-        if(total.contains("Couldn't create window") || total.contains("OpenGL 2.0 or higher") || total.toLowerCase().contains("pixel format") || total.contains("GLEW")|| total.contains("unsupported combination of formats")){
+        if(total.contains("Couldn't create window") || total.contains("OpenGL 2.0 or higher") || total.toLowerCase().contains("pixel format") || total.contains("GLEW") || total.contains("unsupported combination of formats")){
 
             message(
-                total.contains("Couldn't create window") ? "A graphics initialization error has occured! Try to update your graphics drivers:\n" + finalMessage :
-                            "Your graphics card does not support the right OpenGL features.\n" +
-                                    "Try to update your graphics drivers. If this doesn't work, your computer may not support Mindustry.\n\n" +
-                                    "Full message: " + finalMessage);
+            total.contains("Couldn't create window") ? "A graphics initialization error has occured! Try to update your graphics drivers:\n" + finalMessage :
+            "Your graphics card does not support the right OpenGL features.\n" +
+            "Try to update your graphics drivers. If this doesn't work, your computer may not support Mindustry.\n\n" +
+            "Full message: " + finalMessage);
             badGPU = true;
         }
 
@@ -247,7 +261,7 @@ public class DesktopLauncher extends ClientLauncher{
 
         LoadedMod cause = CrashHandler.getModCause(e);
         String causeString = cause == null ? (Structs.contains(e.getStackTrace(), st -> st.getClassName().contains("rhino.gen.")) ? "A mod or script has caused Mindustry to crash.\nConsider disabling your mods if the issue persists.\n" : "Mindustry has crashed.") :
-            "'" + cause.meta.displayName + "' (" + cause.name + ") has caused Mindustry to crash.\nConsider disabling this mod if issues persist.\n";
+        "'" + cause.meta.displayName + "' (" + cause.name + ") has caused Mindustry to crash.\nConsider disabling this mod if issues persist.\n";
 
         CrashHandler.handle(e, file -> {
             Throwable fc = Strings.getFinalCause(e);
@@ -348,7 +362,8 @@ public class DesktopLauncher extends ClientLauncher{
 
             try{
                 DiscordRPC.send(presence);
-            }catch(Exception ignored){}
+            }catch(Exception ignored){
+            }
         }
 
         if(steam){
@@ -397,23 +412,26 @@ public class DesktopLauncher extends ClientLauncher{
                 graphics.setFullscreen();
             }
         }else if(oldWindowedWidth > 0 && oldWindowedHeight > 0){
+            boolean wasBorderless = isBorderless;
             if(isBorderless){
                 graphics.setBorderless(isBorderless = false);
             }else{
                 SDL_SetWindowFullscreen(window, 0);
             }
+            if(!wasBorderless || !oldWindowMaximized){
+                if(!isBorderless && oldWindowMaximized){
+                    // Might seem extra work, but is required for at least Windows to remember the original size and position before maximizing
+                    SDL_RestoreWindow(window);
+                }
 
-            if(!isBorderless && oldWindowMaximized){
-                // Might seem extra work, but is required for at least Windows to remember the original size and position before maximizing
-                SDL_RestoreWindow(window);
+                SDL_SetWindowSize(window, oldWindowedWidth, oldWindowedHeight);
+                SDL_SetWindowPosition(window, oldWindowedPosX, oldWindowedPosY);
+
+                if(!isBorderless && oldWindowMaximized){
+                    SDL_MaximizeWindow(window);
+                }
             }
 
-            SDL_SetWindowSize(window, oldWindowedWidth, oldWindowedHeight);
-            SDL_SetWindowPosition(window, oldWindowedPosX, oldWindowedPosY);
-
-            if(!isBorderless && oldWindowMaximized){
-                SDL_MaximizeWindow(window);
-            }
             oldWindowedWidth = oldWindowedHeight = -1;
         }
     }
